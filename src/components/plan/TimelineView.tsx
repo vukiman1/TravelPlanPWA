@@ -68,10 +68,10 @@ export function TimelineView({ trip, items, onSelect, onAdd }: TimelineViewProps
                         </div>
                         <div className="mt-2 flex items-center justify-between border-t border-line/60 pt-2 text-sm">
                           <span className="text-ink-faint">
-                            Dự kiến <span className="tnum font-medium text-ink-soft">{formatVnd(item.plannedAmount)}</span>
+                            D.Kiến <span className="tnum font-medium text-ink-soft">{formatVnd(item.plannedAmount)}</span>
                           </span>
                           <span className="text-ink-faint">
-                            Thực tế{' '}
+                            T.Tế{' '}
                             <span className={`tnum font-semibold ${item.actualAmount === null ? 'text-ink-faint' : 'text-sage'}`}>
                               {item.actualAmount === null ? '—' : formatVnd(item.actualAmount)}
                             </span>
