@@ -12,9 +12,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'app-icon.svg'],
       manifest: {
-        name: 'Trip Budget — Kế hoạch chi tiêu du lịch',
-        short_name: 'Trip Budget',
-        description: 'Lập và theo dõi chi tiêu cho chuyến du lịch của bạn.',
+        name: 'Mình Đi Biển — Kế hoạch chuyến đi của hai đứa',
+        short_name: 'Mình Đi Biển',
+        description: 'Kế hoạch cho chuyến đi của hai đứa 🌊',
         lang: 'vi',
         theme_color: '#0E4F4A',
         background_color: '#F4ECDB',

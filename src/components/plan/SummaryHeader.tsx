@@ -2,14 +2,12 @@ import { TriangleAlert } from 'lucide-react'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { formatVnd } from '@/lib/format'
 import type { BudgetSummary } from '@/services/budget.service'
-import type { Trip } from '@/types/trip'
 
 interface SummaryHeaderProps {
-  trip: Trip
   summary: BudgetSummary
 }
 
-export function SummaryHeader({ trip, summary }: SummaryHeaderProps) {
+export function SummaryHeader({ summary }: SummaryHeaderProps) {
   const percentLabel = Math.round(summary.percentUsed * 100)
   const fillClassName = summary.isOverBudget ? 'bg-coral' : summary.isNearLimit ? 'bg-sun' : 'bg-[#74c9a6]'
 
@@ -19,10 +17,9 @@ export function SummaryHeader({ trip, summary }: SummaryHeaderProps) {
       <div className="pointer-events-none absolute right-5 top-5 size-14 rounded-full bg-sun/80 sm:size-20" />
 
       <div className="relative">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-paper/55">Ngân sách chuyến đi</p>
-        <h1 className="mt-2 max-w-[18ch] pr-16 font-display text-3xl leading-tight text-paper sm:pr-0 sm:text-[2.5rem]">
-          {trip.name}
-        </h1>
+        <h2 className="max-w-[18ch] pr-16 font-display text-2xl leading-tight text-paper sm:pr-0 sm:text-3xl">
+          Ngân sách chuyến đi
+        </h2>
 
         <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-[1fr_1fr_1.3fr]">
           <Figure label="Tổng ngân sách" value={formatVnd(summary.totalBudget)} />

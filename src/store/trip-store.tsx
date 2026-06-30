@@ -1,18 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { toast } from 'sonner'
-import { Onboarding } from '@/components/Onboarding'
 import { Button } from '@/components/ui/Button'
+import { COUPLE_STORAGE_KEY, DEFAULT_COUPLE } from '@/constants/app'
+import { COTO_TRIP_ID } from '@/constants/trip'
 import { SupabaseError } from '@/lib/errors'
-import { INITIAL_ITEMS, INITIAL_TRIP } from '@/data/mock'
 import * as itemRepo from '@/repositories/item.repository'
 import * as tripRepo from '@/repositories/trip.repository'
-import type { CreateTripInput } from '@/repositories/trip.repository'
-import type { Trip, TripItem } from '@/types/trip'
+import type { Couple, Trip, TripItem } from '@/types/trip'
 
-const ACTIVE_KEY = 'trip-budget:active-trip-id'
-
-export interface TripData {
+interface TripData {
   trip: Trip
   items: TripItem[]
 }
@@ -20,76 +17,76 @@ export interface TripData {
 interface TripStore {
   trip: Trip
   items: TripItem[]
+  couple: Couple
   updateTrip: (patch: Partial<Trip>) => void
   upsertItem: (item: TripItem) => void
   deleteItem: (id: string) => void
-  addDay: () => void
-  importData: (data: TripData) => Promise<void>
-  resetToSample: () => Promise<void>
-  switchTrip: () => void
+  updateCouple: (next: Couple) => void
 }
 
-type Status = 'loading' | 'onboarding' | 'ready' | 'error'
+type Status = 'loading' | 'ready' | 'error'
 
 const TripContext = createContext<TripStore | null>(null)
 
-export function TripProvider({ children }: { children: ReactNode }) {
-  const [activeId, setActiveId] = useState<string | null>(() => localStorage.getItem(ACTIVE_KEY))
-  const [data, setData] = useState<TripData | null>(null)
-  const [status, setStatus] = useState<Status>(() => (localStorage.getItem(ACTIVE_KEY) ? 'loading' : 'onboarding'))
+function readCouple(): Couple | null {
+  const raw = localStorage.getItem(COUPLE_STORAGE_KEY)
+  if (!raw) return null
+  try {
+    const parsed = JSON.parse(raw) as Partial<Couple>
+    const you = parsed.you?.trim()
+    const partner = parsed.partner?.trim()
+    return you && partner ? { you, partner } : null
+  } catch {
+    return null
+  }
+}
 
-  const persistActive = useCallback((id: string | null) => {
-    if (id) localStorage.setItem(ACTIVE_KEY, id)
-    else localStorage.removeItem(ACTIVE_KEY)
-    setActiveId(id)
+export function TripProvider({ children }: { children: ReactNode }) {
+  const [couple, setCouple] = useState<Couple>(() => readCouple() ?? DEFAULT_COUPLE)
+  const [data, setData] = useState<TripData | null>(null)
+  const [status, setStatus] = useState<Status>('loading')
+
+  const loadTrip = useCallback(async () => {
+    setStatus('loading')
+    try {
+      const trip = await tripRepo.ensureTrip()
+      const items = await itemRepo.fetchItems(trip.id)
+      setData({ trip, items })
+      setStatus('ready')
+    } catch (error) {
+      console.error(error)
+      setStatus('error')
+      toast.error(error instanceof SupabaseError ? error.message : 'Lỗi kết nối Supabase')
+    }
   }, [])
 
-  const loadActive = useCallback(
-    async (id: string) => {
-      setStatus('loading')
-      try {
-        const trip = await tripRepo.fetchTrip(id)
-        if (!trip) {
-          toast.error('Không tìm thấy chuyến đi với mã này')
-          persistActive(null)
-          return
-        }
-        const items = await itemRepo.fetchItems(id)
-        setData({ trip, items })
-        setStatus('ready')
-      } catch (error) {
-        console.error(error)
-        setStatus('error')
-        toast.error(error instanceof SupabaseError ? error.message : 'Lỗi kết nối Supabase')
-      }
-    },
-    [persistActive],
-  )
+  const reload = useCallback(() => {
+    void loadTrip()
+  }, [loadTrip])
 
   useEffect(() => {
-    if (!activeId) {
-      setStatus('onboarding')
-      setData(null)
-      return
-    }
-    void loadActive(activeId)
-  }, [activeId, loadActive])
+    void loadTrip()
+  }, [loadTrip])
 
-  const reload = useCallback(() => {
-    if (activeId) void loadActive(activeId)
-  }, [activeId, loadActive])
+  const updateCouple = useCallback((next: Couple) => {
+    const you = next.you.trim()
+    const partner = next.partner.trim()
+    if (!you || !partner) return
+    const value: Couple = { you, partner }
+    localStorage.setItem(COUPLE_STORAGE_KEY, JSON.stringify(value))
+    setCouple(value)
+  }, [])
 
   const updateTrip = useCallback(
     (patch: Partial<Trip>) => {
       setData((prev) => (prev ? { ...prev, trip: { ...prev.trip, ...patch } } : prev))
-      if (!activeId) return
-      tripRepo.updateTrip(activeId, patch).catch((error) => {
+      tripRepo.updateTrip(COTO_TRIP_ID, patch).catch((error) => {
         console.error(error)
         toast.error('Không lưu được thay đổi chuyến đi')
         reload()
       })
     },
-    [activeId, reload],
+    [reload],
   )
 
   const upsertItem = useCallback(
@@ -102,14 +99,13 @@ export function TripProvider({ children }: { children: ReactNode }) {
           : [...prev.items, item]
         return { ...prev, items }
       })
-      if (!activeId) return
-      itemRepo.upsertItem(activeId, item).catch((error) => {
+      itemRepo.upsertItem(COTO_TRIP_ID, item).catch((error) => {
         console.error(error)
         toast.error('Không lưu được hoạt động')
         reload()
       })
     },
-    [activeId, reload],
+    [reload],
   )
 
   const deleteItem = useCallback(
@@ -124,65 +120,22 @@ export function TripProvider({ children }: { children: ReactNode }) {
     [reload],
   )
 
-  const addDay = useCallback(() => {
-    if (!data) return
-    updateTrip({ dayCount: data.trip.dayCount + 1 })
-  }, [data, updateTrip])
-
-  const createAndOpen = useCallback(
-    async (input: CreateTripInput) => {
-      const trip = await tripRepo.createTrip(input)
-      persistActive(trip.id)
-    },
-    [persistActive],
-  )
-
-  const createFromData = useCallback(
-    async (source: TripData) => {
-      const trip = await tripRepo.createTrip({
-        name: source.trip.name,
-        totalBudget: source.trip.totalBudget,
-        dayCount: source.trip.dayCount,
-        startDate: source.trip.startDate,
-      })
-      const items = source.items.map((item) => ({ ...item, id: crypto.randomUUID() }))
-      await itemRepo.insertItems(trip.id, items)
-      persistActive(trip.id)
-    },
-    [persistActive],
-  )
-
-  const openByCode = useCallback((code: string) => persistActive(code.trim()), [persistActive])
-
-  const importData = useCallback((source: TripData) => createFromData(source), [createFromData])
-
-  const resetToSample = useCallback(
-    () => createFromData({ trip: INITIAL_TRIP, items: INITIAL_ITEMS }),
-    [createFromData],
-  )
-
-  const switchTrip = useCallback(() => persistActive(null), [persistActive])
-
   const value = useMemo<TripStore | null>(() => {
     if (status !== 'ready' || !data) return null
     return {
       trip: data.trip,
       items: data.items,
+      couple,
       updateTrip,
       upsertItem,
       deleteItem,
-      addDay,
-      importData,
-      resetToSample,
-      switchTrip,
+      updateCouple,
     }
-  }, [status, data, updateTrip, upsertItem, deleteItem, addDay, importData, resetToSample, switchTrip])
+  }, [status, data, couple, updateTrip, upsertItem, deleteItem, updateCouple])
 
   if (status === 'loading') return <LoadingScreen />
-  if (status === 'error') return <ErrorScreen onRetry={reload} onSwitch={switchTrip} />
-  if (status === 'onboarding' || !value) {
-    return <Onboarding onCreate={createAndOpen} onOpen={openByCode} onSample={resetToSample} />
-  }
+  if (status === 'error') return <ErrorScreen onRetry={reload} />
+  if (!value) return <LoadingScreen />
   return <TripContext.Provider value={value}>{children}</TripContext.Provider>
 }
 
@@ -203,24 +156,16 @@ function LoadingScreen() {
 
 interface ErrorScreenProps {
   onRetry: () => void
-  onSwitch: () => void
 }
 
-function ErrorScreen({ onRetry, onSwitch }: ErrorScreenProps) {
+function ErrorScreen({ onRetry }: ErrorScreenProps) {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-5 px-6 text-center">
       <div>
         <h1 className="font-display text-2xl text-ink">Không kết nối được dữ liệu</h1>
-        <p className="mt-2 max-w-sm text-sm text-ink-soft">
-          Kiểm tra kết nối mạng rồi thử lại, hoặc mở một chuyến đi khác.
-        </p>
+        <p className="mt-2 max-w-sm text-sm text-ink-soft">Kiểm tra kết nối mạng rồi thử lại.</p>
       </div>
-      <div className="flex gap-2">
-        <Button onClick={onRetry}>Thử lại</Button>
-        <Button variant="secondary" onClick={onSwitch}>
-          Đổi chuyến đi
-        </Button>
-      </div>
+      <Button onClick={onRetry}>Thử lại</Button>
     </div>
   )
 }

@@ -1,10 +1,16 @@
-import { CalendarPlus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { DayGroup } from '@/components/plan/DayGroup'
+import { CoverHero } from '@/components/CoverHero'
+import { ActivitiesView } from '@/components/plan/ActivitiesView'
 import { ItemModal } from '@/components/plan/ItemModal'
+import { SpendingView } from '@/components/plan/SpendingView'
 import { SummaryHeader } from '@/components/plan/SummaryHeader'
-import { computeSummary, groupByDay } from '@/services/budget.service'
+import { TimelineView } from '@/components/plan/TimelineView'
+import { ViewSwitcher } from '@/components/plan/ViewSwitcher'
+import type { PlanView } from '@/components/plan/ViewSwitcher'
+import { Button } from '@/components/ui/Button'
+import { computeSummary } from '@/services/budget.service'
 import { useTripStore } from '@/store/trip-store'
 import type { TripItem } from '@/types/trip'
 
@@ -15,11 +21,11 @@ interface ModalState {
 }
 
 export function PlanPage() {
-  const { trip, items, upsertItem, deleteItem, addDay } = useTripStore()
+  const { trip, items, couple, upsertItem, deleteItem } = useTripStore()
+  const [view, setView] = useState<PlanView>('timeline')
   const [modal, setModal] = useState<ModalState>({ open: false, item: null, day: 1 })
 
   const summary = useMemo(() => computeSummary(trip, items), [trip, items])
-  const groups = useMemo(() => groupByDay(items, trip.dayCount), [items, trip.dayCount])
 
   function openEdit(item: TripItem) {
     setModal({ open: true, item, day: item.dayNumber })
@@ -41,31 +47,23 @@ export function PlanPage() {
 
   return (
     <div className="space-y-5">
-      <SummaryHeader trip={trip} summary={summary} />
+      <CoverHero trip={trip} couple={couple} />
 
-      <div className="flex items-center justify-between pt-1">
-        <h2 className="font-display text-xl text-ink">Lịch trình</h2>
-        <button
-          type="button"
-          onClick={addDay}
-          className="inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-surface px-3.5 py-1.5 text-sm font-medium text-ink-soft transition hover:border-ocean/50 hover:text-ocean"
-        >
-          <CalendarPlus className="size-4" />
-          Thêm ngày
-        </button>
+      <SummaryHeader summary={summary} />
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <ViewSwitcher value={view} onChange={setView} className="w-full sm:flex-1" />
+        <Button onClick={() => openCreate(1)} className="shrink-0">
+          <Plus className="size-4" />
+          Thêm hoạt động
+        </Button>
       </div>
 
-      <div className="space-y-4">
-        {groups.map((group) => (
-          <DayGroup
-            key={group.dayNumber}
-            group={group}
-            startDate={trip.startDate}
-            onSelect={openEdit}
-            onAdd={openCreate}
-          />
-        ))}
-      </div>
+      {view === 'timeline' && (
+        <TimelineView trip={trip} items={items} onSelect={openEdit} onAdd={openCreate} />
+      )}
+      {view === 'spending' && <SpendingView trip={trip} items={items} onSelect={openEdit} />}
+      {view === 'activities' && <ActivitiesView items={items} onSelect={openEdit} />}
 
       <ItemModal
         open={modal.open}
