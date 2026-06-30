@@ -32,33 +32,19 @@ export function AppShell() {
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] shadow-float backdrop-blur-md">
-        <div className="mx-auto flex max-w-3xl items-stretch">
+        <div className="mx-auto flex max-w-3xl items-stretch gap-1 px-2 py-1.5">
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/'}
-              className="flex flex-1 flex-col items-center gap-1 px-1 pb-2 pt-2.5"
-            >
+            <NavLink key={to} to={to} end={to === '/'} className="flex flex-1 justify-center">
               {({ isActive }) => (
-                <>
-                  <span
-                    className={cn(
-                      'flex items-center justify-center rounded-full px-5 py-1 transition-colors',
-                      isActive ? 'bg-ocean/12' : 'bg-transparent',
-                    )}
-                  >
-                    <Icon className={cn('size-6 transition-colors', isActive ? 'text-ocean' : 'text-ink-soft')} />
-                  </span>
-                  <span
-                    className={cn(
-                      'text-xs font-medium transition-colors',
-                      isActive ? 'text-ocean' : 'text-ink-soft',
-                    )}
-                  >
-                    {label}
-                  </span>
-                </>
+                <span
+                  className={cn(
+                    'flex w-full flex-col items-center gap-1 rounded-2xl px-3 py-2.5 transition-colors',
+                    isActive ? 'bg-ocean/12 text-ocean' : 'text-ink-soft active:bg-line/50',
+                  )}
+                >
+                  <Icon className="size-6" />
+                  <span className="text-xs font-medium">{label}</span>
+                </span>
               )}
             </NavLink>
           ))}
