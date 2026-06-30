@@ -18,7 +18,7 @@ export function SummaryHeader({ summary }: SummaryHeaderProps) {
 
       <div className="relative">
         <h2 className="max-w-[18ch] pr-16 font-display text-2xl leading-tight text-paper sm:pr-0 sm:text-3xl">
-          Ngân sách chuyến đi
+          Ngân sách
         </h2>
 
         <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-[1fr_1fr_1.3fr]">
@@ -64,12 +64,12 @@ interface FigureProps {
 
 function Figure({ label, value, emphasis = false, tone = 'ok' }: FigureProps) {
   return (
-    <div>
+    <div className={emphasis ? 'col-span-2 sm:col-span-1' : undefined}>
       <p className="text-xs font-medium uppercase tracking-wide text-paper/55">{label}</p>
       <p
         className={
           emphasis
-            ? `tnum mt-1 font-display text-2xl font-semibold sm:text-3xl ${tone === 'over' ? 'text-coral-soft' : 'text-sun'}`
+            ? `tnum mt-1 whitespace-nowrap font-display text-2xl font-semibold sm:text-3xl ${tone === 'over' ? 'text-coral-soft' : 'text-sun'}`
             : 'tnum mt-1 text-lg font-semibold text-paper sm:text-xl'
         }
       >
