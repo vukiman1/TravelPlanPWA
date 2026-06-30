@@ -106,22 +106,20 @@ export function ItemModal({ open, onOpenChange, item, defaultDay, dayCount, onSu
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-ocean-deep/45 backdrop-blur-sm animate-[fade_.15s_ease-out]" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[92dvh] w-[calc(100vw-1.5rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-card border border-line bg-surface p-5 shadow-float animate-[pop_.16s_ease-out] sm:p-6">
-          <div className="mb-5 flex items-start justify-between gap-4">
-            <div>
-              <Dialog.Title className="font-display text-xl text-ink">
-                {isEditing ? 'Sửa hoạt động' : 'Thêm hoạt động'}
-              </Dialog.Title>
-              <Dialog.Description className="mt-1 text-sm text-ink-faint">
-                Ghi lại dự kiến và thực tế cho từng mục trong lịch trình.
-              </Dialog.Description>
-            </div>
+        <Dialog.Content
+          aria-describedby={undefined}
+          className="fixed left-1/2 top-1/2 z-50 max-h-[92dvh] w-[calc(100vw-1.5rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-card border border-line bg-surface p-4 shadow-float animate-[pop_.16s_ease-out] sm:p-5"
+        >
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <Dialog.Title className="font-display text-xl text-ink">
+              {isEditing ? 'Sửa hoạt động' : 'Thêm hoạt động'}
+            </Dialog.Title>
             <Dialog.Close className="rounded-full p-1.5 text-ink-faint transition hover:bg-ink/5 hover:text-ink">
               <X className="size-5" />
             </Dialog.Close>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={FIELD_LABEL_CLASS}>Ngày</label>
@@ -225,7 +223,7 @@ export function ItemModal({ open, onOpenChange, item, defaultDay, dayCount, onSu
             </div>
           </div>
 
-          <div className="mt-6 flex items-center justify-between gap-3">
+          <div className="mt-5 flex items-center justify-between gap-3">
             {isEditing ? (
               <Button variant="danger" onClick={handleDelete}>
                 <Trash2 className="size-4" />
