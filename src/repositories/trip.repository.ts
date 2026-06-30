@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { SupabaseError } from '@/lib/errors'
 import type { Trip } from '@/types/trip'
+import { COTO_TRIP_ID, COTO_TRIP_NAME, DEFAULT_DAY_COUNT } from '@/constants/trip'
 
 interface TripRow {
   id: string
@@ -10,13 +11,6 @@ interface TripRow {
   start_date: string | null
   currency: string
   created_at: string
-}
-
-export interface CreateTripInput {
-  name: string
-  totalBudget: number
-  dayCount: number
-  startDate: string | null
 }
 
 function toTrip(row: TripRow): Trip {
@@ -36,19 +30,22 @@ export async function fetchTrip(id: string): Promise<Trip | null> {
   return data ? toTrip(data as TripRow) : null
 }
 
-export async function createTrip(input: CreateTripInput): Promise<Trip> {
-  const { data, error } = await supabase
-    .from('trips')
-    .insert({
-      name: input.name,
-      total_budget: input.totalBudget,
-      day_count: input.dayCount,
-      start_date: input.startDate,
-    })
-    .select('*')
-    .single()
-  if (error) throw new SupabaseError('Không tạo được chuyến đi', error)
-  return toTrip(data as TripRow)
+export async function ensureTrip(): Promise<Trip> {
+  const { error } = await supabase.from('trips').upsert(
+    {
+      id: COTO_TRIP_ID,
+      name: COTO_TRIP_NAME,
+      total_budget: 0,
+      day_count: DEFAULT_DAY_COUNT,
+      start_date: null,
+    },
+    { onConflict: 'id', ignoreDuplicates: true },
+  )
+  if (error) throw new SupabaseError('Không khởi tạo được chuyến đi', error)
+
+  const trip = await fetchTrip(COTO_TRIP_ID)
+  if (!trip) throw new SupabaseError('Không tải được chuyến đi', new Error('Trip missing after ensure'))
+  return trip
 }
 
 export async function updateTrip(id: string, patch: Partial<Trip>): Promise<void> {

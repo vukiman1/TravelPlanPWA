@@ -1,4 +1,4 @@
-import type { CategoryId, Trip, TripItem } from '@/types/trip'
+import { type CategoryId, type Trip, type TripItem, CATEGORY_IDS } from '@/types/trip'
 
 const NEAR_LIMIT_RATIO = 0.8
 
@@ -84,4 +84,28 @@ export function totalsByDay(items: TripItem[], dayCount: number): DayTotal[] {
     planned: group.plannedTotal,
     actual: group.actualTotal,
   }))
+}
+
+export interface CategoryGroup {
+  categoryId: CategoryId
+  items: TripItem[]
+  plannedTotal: number
+  actualTotal: number
+}
+
+export function groupByCategory(items: TripItem[]): CategoryGroup[] {
+  return CATEGORY_IDS.map((categoryId) => {
+    const categoryItems = items
+      .filter((item) => item.category === categoryId)
+      .sort(
+        (a, b) =>
+          a.dayNumber - b.dayNumber || a.time.localeCompare(b.time) || a.sortOrder - b.sortOrder,
+      )
+    return {
+      categoryId,
+      items: categoryItems,
+      plannedTotal: categoryItems.reduce((sum, item) => sum + item.plannedAmount, 0),
+      actualTotal: categoryItems.reduce((sum, item) => sum + (item.actualAmount ?? 0), 0),
+    }
+  }).filter((group) => group.items.length > 0)
 }

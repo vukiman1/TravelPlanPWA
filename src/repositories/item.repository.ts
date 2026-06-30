@@ -59,12 +59,6 @@ export async function upsertItem(tripId: string, item: TripItem): Promise<void> 
   if (error) throw new SupabaseError('Không lưu được hoạt động', error)
 }
 
-export async function insertItems(tripId: string, items: TripItem[]): Promise<void> {
-  if (items.length === 0) return
-  const { error } = await supabase.from('items').insert(items.map((item) => toRow(tripId, item)))
-  if (error) throw new SupabaseError('Không lưu được danh sách hoạt động', error)
-}
-
 export async function deleteItem(id: string): Promise<void> {
   const { error } = await supabase.from('items').delete().eq('id', id)
   if (error) throw new SupabaseError('Không xóa được hoạt động', error)

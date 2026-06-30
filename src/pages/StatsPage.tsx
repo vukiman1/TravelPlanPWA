@@ -11,6 +11,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import { StatsTable } from '@/components/stats/StatsTable'
 import { CATEGORIES } from '@/constants/categories'
 import { formatVnd, formatVndCompact } from '@/lib/format'
 import { totalsByCategory, totalsByDay } from '@/services/budget.service'
@@ -45,6 +46,7 @@ export function StatsPage() {
 
   const plannedTotal = categoryData.reduce((sum, entry) => sum + entry.planned, 0)
   const hasData = plannedTotal > 0
+  const hasItems = items.length > 0
 
   return (
     <div className="space-y-5">
@@ -119,6 +121,17 @@ export function StatsPage() {
                 <Bar dataKey="actual" name="Thực tế" fill="#DD6444" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        ) : (
+          <EmptyChart />
+        )}
+      </section>
+
+      <section className="rounded-card border border-line bg-surface p-5 shadow-card sm:p-6">
+        <h3 className="font-display text-lg text-ink">Chi tiết theo kế hoạch</h3>
+        {hasItems ? (
+          <div className="mt-4">
+            <StatsTable trip={trip} items={items} />
           </div>
         ) : (
           <EmptyChart />

@@ -32,3 +32,8 @@ export interface Trip {
   startDate: string | null
   currency: 'VND'
 }
+
+export interface Couple {
+  you: string
+  partner: string
+}
