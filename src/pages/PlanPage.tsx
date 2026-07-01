@@ -59,11 +59,13 @@ export function PlanPage() {
         </Button>
       </div>
 
-      {view === 'timeline' && (
-        <TimelineView trip={trip} items={items} onSelect={openEdit} onAdd={openCreate} />
-      )}
-      {view === 'spending' && <SpendingView trip={trip} items={items} onSelect={openEdit} />}
-      {view === 'activities' && <ActivitiesView items={items} onSelect={openEdit} />}
+      <div key={view} className="animate-[view-in_.22s_ease-out]">
+        {view === 'timeline' && (
+          <TimelineView trip={trip} items={items} onSelect={openEdit} onAdd={openCreate} />
+        )}
+        {view === 'spending' && <SpendingView trip={trip} items={items} onSelect={openEdit} />}
+        {view === 'activities' && <ActivitiesView items={items} onSelect={openEdit} />}
+      </div>
 
       <ItemModal
         open={modal.open}

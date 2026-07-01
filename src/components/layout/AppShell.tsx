@@ -1,14 +1,9 @@
-import { ListChecks, PieChart, Settings } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
+import { NavDrawer } from '@/components/layout/NavDrawer'
 import { APP_NAME } from '@/constants/app'
+import { NAV_ITEMS } from '@/constants/navigation'
 import { cn } from '@/lib/cn'
 import { useTripStore } from '@/store/trip-store'
-
-const NAV_ITEMS = [
-  { to: '/', label: 'Kế hoạch', icon: ListChecks },
-  { to: '/stats', label: 'Thống kê', icon: PieChart },
-  { to: '/settings', label: 'Cài đặt', icon: Settings },
-] as const
 
 export function AppShell() {
   const { couple } = useTripStore()
@@ -17,9 +12,12 @@ export function AppShell() {
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-30 border-b border-line/70 bg-sand/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-2.5 px-4 py-3">
-          <div className="flex shrink-0 items-center gap-2.5">
-            <img src="/app-icon.svg" alt="" className="size-8 rounded-lg shadow-sm" />
-            <span className="font-display text-lg font-semibold text-ocean">{APP_NAME}</span>
+          <div className="flex min-w-0 items-center gap-2">
+            <NavDrawer />
+            <div className="flex shrink-0 items-center gap-2.5">
+              <img src="/app-icon.svg" alt="" className="size-8 rounded-lg shadow-sm" />
+              <span className="font-display text-lg font-semibold text-ocean">{APP_NAME}</span>
+            </div>
           </div>
           <span className="min-w-0 truncate text-sm font-medium text-ink">
             {couple.you} <span className="text-coral">❤</span> {couple.partner}
@@ -27,11 +25,11 @@ export function AppShell() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-[calc(6rem_+_env(safe-area-inset-bottom))] pt-5">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-[calc(6rem_+_env(safe-area-inset-bottom))] pt-5 landscape-phone:pb-[calc(1.5rem_+_env(safe-area-inset-bottom))]">
         <Outlet />
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] shadow-float backdrop-blur-md">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] shadow-float backdrop-blur-md landscape-phone:hidden">
         <div className="mx-auto flex max-w-3xl items-stretch gap-1 px-2 py-1.5">
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
             <NavLink key={to} to={to} end={to === '/'} className="flex flex-1 justify-center">
